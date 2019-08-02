@@ -16,7 +16,7 @@ router.post('/register', async function (req, res) {
     const pool = await poolPromise.poolPromise;
     const { recordset } = await pool.request()
       .input('input_email', poolPromise.sql.VarChar, req.body.email)
-      .query('select * from [user] where email = @input_email');
+      .query('select * from [userr] where email = @input_email');
 
     // 404 Not Found In an API, means the endpoint is valid but the resource itself does not exist.
     if (recordset[0]) res.status(404).send('Email already exists');
@@ -38,9 +38,9 @@ router.post('/register', async function (req, res) {
       .input('input_name', poolPromise.sql.VarChar, req.body.name)
       .input('input_email', poolPromise.sql.VarChar, req.body.email)
       .input('input_password', poolPromise.sql.VarChar, hashedPassword)
-      .query('INSERT INTO [user] (name, email, password) VALUES (@input_name, @input_email, @input_password)');
+      .query('INSERT INTO [userr] (name, email, password) VALUES (@input_name, @input_email, @input_password)');
 
-     if (savedUser.rowsAffected) res.status(200).send({ userEmail: req.body.email });
+    if (savedUser.rowsAffected) res.status(200).send({ userEmail: req.body.email });
 
   } catch (error) {
     res.status(400).send(error);
@@ -49,7 +49,37 @@ router.post('/register', async function (req, res) {
 });
 
 // LOGIN
-// router.post('/login', async function (req, res) {
-// });
+router.post('/login', async function (req, res) {
+  let user= null;
+
+  // VALIDATE THE DATA BEFORE LOGIN A USER
+  const { error } = validation.loginValidation(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  try {
+    // CHECK IF THE EMAIL EXIST IN THE DATABASE
+    const pool = await poolPromise.poolPromise;
+    const { recordset } = await pool.request()
+      .input('input_email', poolPromise.sql.VarChar, req.body.email)
+      .query('select * from [userr] where email = @input_email');
+
+    user = recordset[0];
+
+    // 404 Not Found In an API, means the endpoint is valid but the resource itself does not exist.
+    if (!user) res.status(400).send('Email doesnt exists');
+  } catch (error) {
+    res.status(400).send(error);
+  }
+
+  // CHECK IF PASSWORD IS CORRECT
+  const validPass = await bcrypt.compare(req.body.password, user.password);
+  if (!validPass) {
+    return res.status(400).send('Invalid password')
+  }
+  else {
+    const token = jwt.sign({ email: user.email }, process.env.TOKEN_SECRET);
+    res.header('auth-token', token).send(token);
+  }
+});
 
 module.exports = router;
