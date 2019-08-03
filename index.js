@@ -6,7 +6,7 @@ dotenv.config();
 
 // Import Routes
 import authRoute from './routes/auth'
-//  import otherApiRoute from './routes/otherApi'
+ import apiRoute from './routes/api'
 
 const app = express();
 
@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Routes middlewares
 app.use('/auth', authRoute);
-// app.use('/api', otherApiRoute);
+app.use('/api', apiRoute);
 
 // Assign a port from the environment variable
 const PORT = process.env.PORT || 3000;
