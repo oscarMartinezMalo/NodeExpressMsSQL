@@ -16,7 +16,7 @@ router.post('/register', async function (req, res) {
     const pool = await poolPromise.poolPromise;
     const { recordset } = await pool.request()
       .input('input_email', poolPromise.sql.VarChar, req.body.email)
-      .query('select * from [userr] where email = @input_email');
+      .query('select * from [user] where email = @input_email');
 
     // 404 Not Found In an API, means the endpoint is valid but the resource itself does not exist.
     if (recordset[0]) res.status(404).send('Email already exists');
@@ -38,7 +38,7 @@ router.post('/register', async function (req, res) {
       .input('input_name', poolPromise.sql.VarChar, req.body.name)
       .input('input_email', poolPromise.sql.VarChar, req.body.email)
       .input('input_password', poolPromise.sql.VarChar, hashedPassword)
-      .query('INSERT INTO [userr] (name, email, password) VALUES (@input_name, @input_email, @input_password)');
+      .query('INSERT INTO [user] (name, email, password) VALUES (@input_name, @input_email, @input_password)');
 
     if (savedUser.rowsAffected) res.status(200).send({ userEmail: req.body.email });
 
@@ -61,7 +61,7 @@ router.post('/login', async function (req, res) {
     const pool = await poolPromise.poolPromise;
     const { recordset } = await pool.request()
       .input('input_email', poolPromise.sql.VarChar, req.body.email)
-      .query('select * from [userr] where email = @input_email');
+      .query('select * from [user] where email = @input_email');
 
     user = recordset[0];
 
